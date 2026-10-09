@@ -7,7 +7,7 @@
         android:allowBackup="true"
         android:label="LinkSave"
         android:supportsRtl="true"
-        android:theme="@style/Theme.LinkSave">
+        android:theme="@style/Theme.LifeLinkSaver">
         <activity
             android:name=".MainActivity"
             android:exported="true"
