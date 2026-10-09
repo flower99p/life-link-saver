@@ -37,6 +37,7 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -96,6 +97,12 @@ fun LinkSaverScreen(
     var showAdd by rememberSaveable { mutableStateOf(false) }
     var prefill by rememberSaveable { mutableStateOf("") }
     val showSearch = selectedTab == 1
+    val categoryChipColors = FilterChipDefaults.filterChipColors(
+        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+        selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
+    )
 
     LaunchedEffect(sharedText) {
         if (sharedText != null) {
@@ -199,14 +206,18 @@ fun LinkSaverScreen(
                     FilterChip(
                         selected = filter == null,
                         onClick = { filter = null },
-                        label = { Text("Semua (${links.size})") }
+                        label = { Text("Semua (${links.size})") },
+                        colors = categoryChipColors,
+                        border = null
                     )
                 }
                 items(Categories) { cat ->
                     FilterChip(
                         selected = filter == cat,
                         onClick = { filter = if (filter == cat) null else cat },
-                        label = { Text("$cat (${links.count { it.category == cat }})") }
+                        label = { Text("$cat (${links.count { it.category == cat }})") },
+                        colors = categoryChipColors,
+                        border = null
                     )
                 }
             }
