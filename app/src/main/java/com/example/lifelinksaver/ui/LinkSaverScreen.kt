@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -72,6 +74,7 @@ fun LinkSaverScreen(
     val links by viewModel.links.collectAsState()
     var query by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf<String?>(null) }
+    var linkLayout by rememberSaveable { mutableStateOf("Line") }
     var showAdd by rememberSaveable { mutableStateOf(false) }
     var prefill by rememberSaveable { mutableStateOf("") }
 
@@ -146,8 +149,38 @@ fun LinkSaverScreen(
                 }
             }
 
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(listOf("Line", "Compact", "Grid 3")) { layout ->
+                    FilterChip(
+                        selected = linkLayout == layout,
+                        onClick = { linkLayout = layout },
+                        label = { Text(layout) }
+                    )
+                }
+            }
+
             if (visible.isEmpty()) {
                 EmptyState(hasLinks = links.isNotEmpty())
+            } else if (linkLayout == "Grid 3") {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 96.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(visible.size, key = { visible[it].id }) { index ->
+                        LinkCard(
+                            link = visible[index],
+                            layout = linkLayout,
+                            onOpen = { onOpenLink(visible[index].url) },
+                            onDelete = { viewModel.deleteLink(visible[index]) },
+                            onRefresh = { viewModel.refreshThumbnail(visible[index]) }
+                        )
+                    }
+                }
             } else {
                 LazyColumn(
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 96.dp),
@@ -156,6 +189,7 @@ fun LinkSaverScreen(
                     items(visible, key = { it.id }) { link ->
                         LinkCard(
                             link = link,
+                            layout = linkLayout,
                             onOpen = { onOpenLink(link.url) },
                             onDelete = { viewModel.deleteLink(link) },
                             onRefresh = { viewModel.refreshThumbnail(link) }
@@ -207,6 +241,7 @@ private fun EmptyState(hasLinks: Boolean) {
 @Composable
 private fun LinkCard(
     link: SavedLinkEntity,
+    layout: String,
     onOpen: () -> Unit,
     onDelete: () -> Unit,
     onRefresh: () -> Unit
@@ -215,33 +250,71 @@ private fun LinkCard(
         onClick = onOpen,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Box(
-            Modifier.fillMaxWidth().aspectRatio(16f / 9f),
-        ) {
-            if (link.thumbnailUrl != null) {
-                AsyncImage(
-                    model = link.thumbnailUrl,
-                    contentDescription = link.title,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                Surface(
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            Icons.Default.Link,
-                            contentDescription = null,
-                            modifier = Modifier.size(48.dp),
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer
+        when (layout) {
+            "Compact" -> Row(
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                LinkThumbnail(link, Modifier.size(width = 96.dp, height = 80.dp))
+                Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                    Text(
+                        link.title.ifBlank { LinkViewModel.hostOf(link.url) },
+                        style = MaterialTheme.typography.titleSmall,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        LinkViewModel.hostOf(link.url),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            link.category,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.weight(1f)
                         )
+                        if (link.thumbnailUrl == null) {
+                            TextButton(onClick = onRefresh) { Text("Muat thumbnail") }
+                        }
+                        IconButton(onClick = onDelete) {
+                            Icon(Icons.Default.Delete, contentDescription = "Hapus")
+                        }
                     }
                 }
             }
-        }
-        Column(Modifier.padding(start = 16.dp, top = 12.dp, end = 8.dp, bottom = 8.dp)) {
+            "Grid 3" -> {
+                LinkThumbnail(link, Modifier.fillMaxWidth().aspectRatio(1f))
+                Column(Modifier.padding(start = 8.dp, top = 6.dp, end = 4.dp, bottom = 2.dp)) {
+                    Text(
+                        link.title.ifBlank { LinkViewModel.hostOf(link.url) },
+                        style = MaterialTheme.typography.labelLarge,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (link.thumbnailUrl == null) {
+                            IconButton(onClick = onRefresh, modifier = Modifier.size(40.dp)) {
+                                Icon(Icons.Default.Link, contentDescription = "Muat thumbnail")
+                            }
+                        }
+                        Spacer(Modifier.weight(1f))
+                        IconButton(onClick = onDelete, modifier = Modifier.size(40.dp)) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Hapus",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
+            }
+            else -> {
+                LinkThumbnail(link, Modifier.fillMaxWidth().aspectRatio(16f / 9f))
+                Column(Modifier.padding(start = 16.dp, top = 12.dp, end = 8.dp, bottom = 8.dp)) {
             Text(
                 link.title.ifBlank { LinkViewModel.hostOf(link.url) },
                 style = MaterialTheme.typography.titleMedium,
@@ -282,6 +355,36 @@ private fun LinkCard(
                         Icons.Default.Delete,
                         contentDescription = "Hapus",
                         tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LinkThumbnail(link: SavedLinkEntity, modifier: Modifier) {
+    Box(modifier) {
+        if (link.thumbnailUrl != null) {
+            AsyncImage(
+                model = link.thumbnailUrl,
+                contentDescription = link.title,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            Surface(
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Default.Link,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
             }
