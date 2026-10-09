@@ -30,7 +30,7 @@ fun SaveLinkInput(
     value: String,
     onValueChange: (String) -> Unit,
     onSave: () -> Unit,
-    selectedCategory: String = \"Masuk\"
+    selectedCategory: String = "Masuk"
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -71,91 +71,77 @@ fun SaveLinkInput(
                 ) { innerTextField ->
                     if (value.isEmpty()) {
                         Text(
-                            text = \"Tempel link untuk disimpan...\",\n                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),\n                            fontSize = 18.sp\n                        )
+                            text = "Tempel link untuk disimpan...",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            fontSize = 18.sp
+                        )
                     }
                     innerTextField()
                 }
 
                 Spacer(Modifier.width(10.dp))
                 Box(
-                    modifier = Modifier\n                        .size(20.dp)\n                        .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)\n                )
+                    modifier = Modifier
+                        .size(20.dp)
+                        .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                )
             }
         }
 
         Spacer(Modifier.height(18.dp))
 
-        Row(\n            modifier = Modifier.fillMaxWidth(),\n            horizontalArrangement = Arrangement.Center,\n            verticalAlignment = Alignment.CenterVertically\n        ) {\n            Text(\n                text = \"Simpan ke\",\n                style = MaterialTheme.typography.bodyLarge,\n                color = MaterialTheme.colorScheme.onSurfaceVariant\n            )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Simpan ke",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
             Spacer(Modifier.width(10.dp))
 
-            Box(\n                modifier = Modifier\n                    .height(38.dp)\n                    .width(110.dp)\n                    .background(Color(0xFFC9D8BA), RoundedCornerShape(18.dp))\n                    .padding(horizontal = 14.dp),\n                contentAlignment = Alignment.Center\n            ) {\n                Row(\n                    verticalAlignment = Alignment.CenterVertically,\n                    horizontalArrangement = Arrangement.SpaceBetween,\n                    modifier = Modifier.fillMaxWidth()\n                ) {\n                    Icon(\n                        imageVector = Icons.Default.FolderOpen,\n                        contentDescription = null,\n                        modifier = Modifier.size(18.dp),\n                        tint = Color(0xFF3F4738)\n                    )\n                    Text(selectedCategory, color = Color(0xFF3F4738), fontWeight = FontWeight.Medium)\n                    Icon(\n                        imageVector = Icons.Default.ArrowDropDown,\n                        contentDescription = null,\n                        modifier = Modifier.size(18.dp),\n                        tint = Color(0xFF3F4738)\n                    )\n                }\n            }
-
-            Spacer(Modifier.width(10.dp))
-
-            Button(\n                onClick = onSave,\n                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),\n                shape = RoundedCornerShape(18.dp),\n                modifier = Modifier.height(38.dp)\n            ) {\n                Text(\"Simpan\", color = MaterialTheme.colorScheme.onSurfaceVariant)\n            }\n        }\n    }\n}\nEOF
-
-cat > "$ROOT_DIR/app/src/main/java/com/example/lifelinksaver/ui/components/BottomNavigationBar.kt" <<'EOF'
-package com.example.lifelinksaver.ui.components
-
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Icon
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
-
-@Composable
-fun BottomNavigationBar(
-    selectedTab: String,
-    onTabClick: (String) -> Unit
-) {
-    val tabs = listOf(
-        TabItem(\"Home\", Icons.Default.Home),
-        TabItem(\"Saved\", Icons.Default.Bookmark),
-        TabItem(\"Profile\", Icons.Default.AccountCircle),
-        TabItem(\"Settings\", Icons.Default.Settings)
-    )
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        tabs.forEach { tab ->
-            val selected = tab.name == selectedTab
             Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .height(68.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(
-                        if (selected) Color(0xFFDDE9D5) else Color(0xFFE8E7E5)
-                    )
-                    .clickable { onTabClick(tab.name) },
+                    .height(38.dp)
+                    .width(110.dp)
+                    .background(Color(0xFFC9D8BA), RoundedCornerShape(18.dp))
+                    .padding(horizontal = 14.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = tab.icon,
-                    contentDescription = tab.name,
-                    tint = if (selected) Color(0xFF2C2C2C) else Color(0xFF7E7E7E),
-                    modifier = Modifier.size(30.dp)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.FolderOpen,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = Color(0xFF3F4738)
+                    )
+                    Text(selectedCategory, color = Color(0xFF3F4738), fontWeight = FontWeight.Medium)
+                    Icon(
+                        imageVector = Icons.Default.ArrowDropDown,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = Color(0xFF3F4738)
+                    )
+                }
+            }
+
+            Spacer(Modifier.width(10.dp))
+
+            Button(
+                onClick = onSave,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                shape = RoundedCornerShape(18.dp),
+                modifier = Modifier.height(38.dp)
+            ) {
+                Text("Simpan", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
 }
-
-data class TabItem(val name: String, val icon: ImageVector)
