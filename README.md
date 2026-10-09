@@ -8,7 +8,8 @@
 - **Material 3 + Monet**: warna dinamis mengikuti wallpaper (Android 12+), dark mode otomatis
 - **Cari & filter** berdasarkan kategori (Ide, Inspirasi, Belajar, Lainnya)
 - **Share ke aplikasi**: bagikan link dari browser/aplikasi lain langsung ke Life Link Saver
-- **Judul & catatan** opsional, buka di browser, unduh media dari link, hapus link
+- **Judul & catatan** opsional, buka di browser, unduh media publik yang dapat diakses langsung ke penyimpanan internal aplikasi, hapus link
+- Unduhan dari media sosial hanya tersedia jika platform menyediakan tautan media publik; konten privat atau yang dibatasi platform tidak dapat diunduh
 
 ## 🛠️ Tech Stack
 
