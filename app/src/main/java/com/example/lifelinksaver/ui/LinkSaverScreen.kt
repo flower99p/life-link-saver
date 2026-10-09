@@ -185,7 +185,6 @@ fun LinkSaverScreen(
                         unselectedTextColor = Color(0xFF514D56)
                     )
                 )
-                NavigationBarItem(
             }
         },
         floatingActionButton = {
