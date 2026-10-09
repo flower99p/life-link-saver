@@ -32,3 +32,11 @@ Project juga dilengkapi workflow GitHub Actions untuk build debug APK secara oto
 ## 📄 License
 
 MIT
+
+## API unduhan (universalDownloader)
+
+Untuk mengunduh dari media sosial, jalankan/deploy [universalDownloader](https://github.com/milancodess/universalDownloader) lalu build dengan:
+
+`./gradlew assembleDebug -PdownloaderApiUrl=https://alamat-api-anda`
+
+Aplikasi memanggil `/api/{platform}/download?url=...`; jika tidak diset, aplikasi hanya mengunduh tautan media langsung.

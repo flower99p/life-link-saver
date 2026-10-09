@@ -16,6 +16,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        val downloaderApi = (project.findProperty("downloaderApiUrl") as String?) ?: ""
+        buildConfigField("String", "DOWNLOADER_API_URL", "\"$downloaderApi\"")
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -42,6 +44,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     composeOptions {

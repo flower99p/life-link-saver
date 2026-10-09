@@ -1,6 +1,10 @@
 package com.example.lifelinksaver.data.remote
 
+import com.example.lifelinksaver.BuildConfig
 import java.io.File
+import java.net.URLEncoder
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
@@ -16,7 +20,7 @@ object MediaDownloader {
 
     suspend fun download(directory: File, url: String, title: String): File =
         withContext(Dispatchers.IO) {
-            val mediaUrl = resolveMediaUrl(url)
+            val mediaUrl = resolveViaApi(url) ?: resolveMediaUrl(url)
             val connection = openConnection(mediaUrl)
             try {
                 val contentType = connection.contentType?.substringBefore(';')?.lowercase(Locale.ROOT).orEmpty()
@@ -64,6 +68,76 @@ object MediaDownloader {
                 connection.disconnect()
             }
         }
+
+    private fun platformFor(url: String): String? {
+        val host = runCatching { URL(url).host.lowercase(Locale.ROOT) }.getOrNull() ?: return null
+        fun has(vararg names: String) = names.any { host == it || host.endsWith(".$it") }
+        return when {
+            has("instagram.com", "facebook.com", "fb.watch") -> "meta"
+            has("tiktok.com") -> "tiktok"
+            has("youtube.com", "youtu.be") -> "youtube"
+            has("twitter.com", "x.com") -> "twitter"
+            has("threads.net", "threads.com") -> "threads"
+            has("reddit.com") -> "reddit"
+            has("pinterest.com", "pin.it") -> "pinterest"
+            has("linkedin.com") -> "linkedin"
+            has("bsky.app") -> "bluesky"
+            has("capcut.com") -> "capcut"
+            has("dailymotion.com", "dai.ly") -> "dailymotion"
+            has("douyin.com") -> "douyin"
+            has("kuaishou.com") -> "kuaishou"
+            has("snapchat.com") -> "snapchat"
+            has("soundcloud.com") -> "soundcloud"
+            has("spotify.com") -> "spotify"
+            has("terabox.com") -> "terabox"
+            has("tumblr.com") -> "tumblr"
+            else -> null
+        }
+    }
+
+    /** Menggunakan API universalDownloader (/api/{platform}/download?url=) bila dikonfigurasi. */
+    private fun resolveViaApi(url: String): String? {
+        val base = BuildConfig.DOWNLOADER_API_URL.trim().trimEnd('/')
+        if (base.isEmpty()) return null
+        val platform = platformFor(url) ?: return null
+        return try {
+            val endpoint = "$base/api/$platform/download?url=${URLEncoder.encode(url, "UTF-8")}"
+            val connection = URL(endpoint).openConnection() as HttpURLConnection
+            try {
+                connection.connectTimeout = 15_000
+                connection.readTimeout = 60_000
+                connection.setRequestProperty("Accept", "application/json")
+                if (connection.responseCode !in 200..299) return null
+                val body = connection.inputStream.use { it.readBytes().toString(Charsets.UTF_8) }
+                val json = JSONObject(body)
+                if (!json.optBoolean("success", false)) return null
+                findMediaLink(json.opt("data"))
+            } finally {
+                connection.disconnect()
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun findMediaLink(node: Any?): String? {
+        val links = mutableListOf<String>()
+        fun walk(value: Any?) {
+            when (value) {
+                is JSONObject -> value.keys().forEach { walk(value.opt(it)) }
+                is JSONArray -> for (i in 0 until value.length()) walk(value.opt(i))
+                is String -> if (value.startsWith("http://") || value.startsWith("https://")) links.add(value)
+            }
+        }
+        walk(node)
+        return links.firstOrNull { link ->
+            val path = runCatching { URL(link).path.substringAfterLast('.', "").lowercase(Locale.ROOT) }.getOrDefault("")
+            path in mediaExtensions && path !in setOf("jpg", "jpeg", "png", "webp")
+        } ?: links.firstOrNull { link ->
+            val path = runCatching { URL(link).path.substringAfterLast('.', "").lowercase(Locale.ROOT) }.getOrDefault("")
+            path in mediaExtensions
+        } ?: links.firstOrNull()
+    }
 
     private fun resolveMediaUrl(pageUrl: String): String {
         var currentUrl = pageUrl
