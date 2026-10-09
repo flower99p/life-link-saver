@@ -11,7 +11,7 @@ import kotlinx.coroutines.withContext
 data class LinkMetadata(val title: String?, val thumbnailUrl: String?)
 
 object LinkMetadataFetcher {
-    private const val MAX_BYTES = 300_000
+    private const val MAX_BYTES = 150_000
 
     fun normalizeTitle(title: String): String = title.replace("(@)", "@")
 
