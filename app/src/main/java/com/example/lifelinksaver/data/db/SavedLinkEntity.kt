@@ -11,5 +11,6 @@ data class SavedLinkEntity(
     val title: String = "",
     val notes: String = "",
     val category: String = "Ide",
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val thumbnailUrl: String? = null
 )
