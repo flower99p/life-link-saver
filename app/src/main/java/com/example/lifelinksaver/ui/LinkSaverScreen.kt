@@ -1,5 +1,10 @@
 package com.example.lifelinksaver.ui
 
+import android.app.DownloadManager
+import android.content.Context
+import android.net.Uri
+import android.os.Environment
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -25,6 +30,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.OpenInBrowser
@@ -232,6 +238,7 @@ fun LinkSaverScreen(
                             link = link,
                             layout = linkLayout,
                             onOpen = { onOpenLink(link.url) },
+                            onDownload = { enqueueMediaDownload(context, link) },
                             onDelete = { viewModel.deleteLink(link) },
                             onRefresh = { viewModel.refreshThumbnail(link) }
                         )
@@ -247,6 +254,7 @@ fun LinkSaverScreen(
                             link = link,
                             layout = linkLayout,
                             onOpen = { onOpenLink(link.url) },
+                            onDownload = { enqueueMediaDownload(context, link) },
                             onDelete = { viewModel.deleteLink(link) },
                             onRefresh = { viewModel.refreshThumbnail(link) }
                         )
@@ -299,6 +307,7 @@ private fun LinkCard(
     link: SavedLinkEntity,
     layout: String,
     onOpen: () -> Unit,
+    onDownload: () -> Unit,
     onDelete: () -> Unit,
     onRefresh: () -> Unit
 ) {
@@ -336,6 +345,9 @@ private fun LinkCard(
                         if (link.thumbnailUrl == null) {
                             TextButton(onClick = onRefresh) { Text("Muat thumbnail") }
                         }
+                        IconButton(onClick = onDownload) {
+                            Icon(Icons.Default.Download, contentDescription = "Unduh media")
+                        }
                         IconButton(onClick = onDelete) {
                             Icon(Icons.Default.Delete, contentDescription = "Hapus")
                         }
@@ -356,6 +368,9 @@ private fun LinkCard(
                             IconButton(onClick = onRefresh, modifier = Modifier.size(40.dp)) {
                                 Icon(Icons.Default.Link, contentDescription = "Muat thumbnail")
                             }
+                        }
+                        IconButton(onClick = onDownload, modifier = Modifier.size(40.dp)) {
+                            Icon(Icons.Default.Download, contentDescription = "Unduh media")
                         }
                         Spacer(Modifier.weight(1f))
                         IconButton(onClick = onDelete, modifier = Modifier.size(40.dp)) {
@@ -403,6 +418,9 @@ private fun LinkCard(
                         if (link.thumbnailUrl == null) {
                             TextButton(onClick = onRefresh) { Text("Muat thumbnail") }
                         }
+                        IconButton(onClick = onDownload) {
+                            Icon(Icons.Default.Download, contentDescription = "Unduh media")
+                        }
                         IconButton(onClick = onOpen) {
                             Icon(Icons.Default.OpenInBrowser, contentDescription = "Buka")
                         }
@@ -417,6 +435,36 @@ private fun LinkCard(
                 }
             }
         }
+    }
+}
+
+private fun enqueueMediaDownload(context: Context, link: SavedLinkEntity) {
+    val url = LinkMetadataFetcher.normalizeUrl(link.url)
+    if (url == null) {
+        Toast.makeText(context, "URL tidak valid", Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    val fileName = Uri.parse(url).lastPathSegment
+        ?.replace(Regex("[^A-Za-z0-9._-]"), "_")
+        ?.take(100)
+        ?.takeIf { it.isNotBlank() && it != "." && it != ".." }
+        ?: "media"
+    val uniqueFileName = "${fileName.substringBeforeLast('.', fileName)}-${System.currentTimeMillis()}" +
+        fileName.substringAfterLast('.', "").takeIf { it.isNotEmpty() }?.let { ".$it" }.orEmpty()
+
+    try {
+        val request = DownloadManager.Request(Uri.parse(url))
+            .setTitle(link.title.ifBlank { LinkViewModel.hostOf(url) })
+            .setDescription("Mengunduh media")
+            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+            .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, uniqueFileName)
+        val manager = context.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
+            ?: error("Download service unavailable")
+        manager.enqueue(request)
+        Toast.makeText(context, "Unduhan dimulai", Toast.LENGTH_SHORT).show()
+    } catch (e: Exception) {
+        Toast.makeText(context, "Tidak dapat memulai unduhan", Toast.LENGTH_SHORT).show()
     }
 }
 
