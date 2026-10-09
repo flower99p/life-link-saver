@@ -130,3 +130,43 @@ fun DoodleLeaf() {
             .background(Color(0xFFD5DDD0), CircleShape)
     )
 }
+
+@Composable
+fun AnimatedEye(blink: Float) {
+    val eyeHeight = (12f * blink).coerceAtLeast(3f)
+    Box(
+        modifier = Modifier
+            .size(width = 26.dp, height = eyeHeight.dp)
+            .background(Color(0xFF1E1E1E), CircleShape)
+    )
+}
+
+@Composable
+fun FloatingPlant(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(40.dp)
+            .background(Color(0xFFC9D8BA), CircleShape)
+    )
+}
+
+@Composable
+fun FloatingCard(
+    modifier: Modifier = Modifier,
+    text: String,
+    subtitle: String
+) {
+    Column(
+        modifier = modifier
+            .background(Color(0xFFEAE7E4), RoundedCornerShape(16.dp))
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text, style = MaterialTheme.typography.titleMedium)
+        Text(
+            subtitle,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
