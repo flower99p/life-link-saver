@@ -38,6 +38,22 @@ class LinkViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { repository.deleteLink(link) }
     }
 
+    fun updateLink(link: SavedLinkEntity, url: String, title: String, notes: String, category: String) {
+        viewModelScope.launch {
+            val updated = link.copy(url = url, title = title, notes = notes, category = category)
+            repository.updateLink(updated)
+            if (url != link.url) {
+                val meta = LinkMetadataFetcher.fetch(url)
+                repository.updateLink(
+                    updated.copy(
+                        title = title.ifBlank { meta.title ?: hostOf(url) },
+                        thumbnailUrl = meta.thumbnailUrl
+                    )
+                )
+            }
+        }
+    }
+
     fun refreshThumbnail(link: SavedLinkEntity) {
         viewModelScope.launch {
             val meta = LinkMetadataFetcher.fetch(link.url)
