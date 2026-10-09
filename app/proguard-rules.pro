@@ -1,49 +1,5 @@
-# Gradle files
-.gradle/
-build/
-
-# Local configuration file (sdk path, etc)
-local.properties
-
-# Log/OS Files
-*.log
-
-# Android Studio generated files and folders
-.idea/
-.DS_Store
-*.iml
-*.apk
-*.ap_
-*.dex
-*.class
-.classpath
-.project
-.settings/
-.toolchain
-local.properties
-*.iml
-*.swp
-
-# Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-[Ww][Ii][Nn]32/
-[Aa][Rr][Mm]/
-[Aa][Rr][Mm]64/
-bld/
-[Bb]in/
-[Oo]bj/
-[Ll]og/
-
-# Misc
-*.md~
-
-# Gradle wrapper
-# keep wrapper in repo if needed
-!gradlew
-!gradlew.bat
-!gradle/wrapper/
+-keep class androidx.room.** { *; }
+-keep @androidx.room.Entity class * { *; }
+-keepclassmembers class * {
+    @androidx.room.* <fields>;
+}

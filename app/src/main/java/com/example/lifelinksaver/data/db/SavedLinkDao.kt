@@ -1,15 +1,29 @@
 package com.example.lifelinksaver.data.db
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.Query
+import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 
-@Entity(tableName = "saved_links")
-data class SavedLinkEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
-    val url: String,
-    val title: String = "",
-    val notes: String = "",
-    val category: String = "Ide",
-    val createdAt: Long = System.currentTimeMillis()
-)
+@Dao
+interface SavedLinkDao {
+    @Insert
+    suspend fun insertLink(link: SavedLinkEntity): Long
+
+    @Update
+    suspend fun updateLink(link: SavedLinkEntity)
+
+    @Delete
+    suspend fun deleteLink(link: SavedLinkEntity)
+
+    @Query("SELECT * FROM saved_links ORDER BY createdAt DESC")
+    fun getAllLinks(): Flow<List<SavedLinkEntity>>
+
+    @Query("SELECT * FROM saved_links WHERE category = :category ORDER BY createdAt DESC")
+    fun getLinksByCategory(category: String): Flow<List<SavedLinkEntity>>
+
+    @Query("SELECT COUNT(*) FROM saved_links WHERE category = :category")
+    fun getLinkCountByCategory(category: String): Flow<Int>
+}

@@ -1,58 +1,36 @@
-package com.example.lifelinksaver.ui.components
+# Life Link Saver
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+🔗 Aplikasi Android untuk menyimpan link dengan desain aesthetic, animasi doodle yang hidup, dan navigasi yang smooth.
 
-@Composable
-fun TopStatusBar() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(34.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .width(240.dp)
-                .height(28.dp)
-                .background(Color(0xFF111111), shape = RoundedCornerShape(18.dp))
-        )
+## 🎯 Fitur Utama
 
-        Row(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("10:59", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            Text("00.05", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(18.dp, 10.dp)
-                        .background(Color.Black, RoundedCornerShape(2.dp))
-                )
-                Box(
-                    modifier = Modifier
-                        .size(10.dp, 10.dp)
-                        .background(Color.Black, CircleShape)
-                )
-            }
-        }
-    }
-}
+- **Save Link**: Simpan URL dengan mudah
+- **Animated Doodle**: Mascot yang bergerak dengan animasi mata berkedip dan daun mengapung
+- **Material 3 Design**: UI modern dan soft sesuai design guidelines Material 3
+- **Saved Links Screen**: Lihat semua link yang sudah disimpan
+- **Open in Browser**: Buka link langsung di browser favorit
+- **Delete Link**: Hapus link yang tidak diperlukan
+- **Category Support**: Kategorisasi link (Ide, Inspirasi, dll)
+- **Dark Mode**: Dukung light dan dark theme otomatis
+
+## 🛠️ Tech Stack
+
+- **Language**: Kotlin
+- **UI Framework**: Jetpack Compose
+- **Design**: Material 3
+- **Database**: Room (siap dikembangkan)
+- **Animation**: Compose Animation API
+
+## 🚀 Cara Menjalankan
+
+1. Buka project di Android Studio
+2. Tunggu Gradle sync selesai
+3. Jalankan app di emulator/device
+
+## 🔄 CI/CD
+
+Project juga dilengkapi workflow GitHub Actions untuk build debug APK secara otomatis.
+
+## 📄 License
+
+MIT

@@ -1,52 +1,132 @@
-package com.example.lifelinksaver.ui.theme
+package com.example.lifelinksaver.ui.components
 
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-
-private val LightColors = lightColorScheme(
-    primary = Color(0xFF9CB385),
-    onPrimary = Color(0xFF1F261C),
-    primaryContainer = Color(0xFFCFDCC2),
-    onPrimaryContainer = Color(0xFF1D2B1A),
-    secondary = Color(0xFFB9D4B1),
-    onSecondary = Color(0xFF1C2619),
-    secondaryContainer = Color(0xFFDFEAD9),
-    background = Color(0xFFF3F0EC),
-    onBackground = Color(0xFF1B1B1B),
-    surface = Color(0xFFF8F5F1),
-    onSurface = Color(0xFF202020),
-    surfaceVariant = Color(0xFFE7E3DF),
-    onSurfaceVariant = Color(0xFF4D4D4D),
-    outline = Color(0xFFE0DDD8),
-    inverseSurface = Color(0xFF1F1F1F),
-    inverseOnSurface = Color(0xFFFDFBF8),
-)
-
-private val DarkColors = darkColorScheme(
-    primary = Color(0xFFB1CC9F),
-    onPrimary = Color(0xFF0E140D),
-    background = Color(0xFF141414),
-    onBackground = Color(0xFFF2F2F2),
-    surface = Color(0xFF1B1B1B),
-    onSurface = Color(0xFFF3F3F3),
-    surfaceVariant = Color(0xFF2D2D2D),
-    onSurfaceVariant = Color(0xFFE3E3E3),
-    outline = Color(0xFF3D3D3D),
-)
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.dp
 
 @Composable
-fun LifeLinkSaverTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit
-) {
-    val colors = if (darkTheme) DarkColors else LightColors
+fun AnimatedDoodleScene() {
+    val infiniteTransition = rememberInfiniteTransition(label = "doodle")
 
-    MaterialTheme(
-        colorScheme = colors,
-        content = content
+    val bobY by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = -10f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "bobY"
+    )
+
+    val floatOffset by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 10f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1700, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "floatOffset"
+    )
+    
+    val blink by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 0.72f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "blink"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(220.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        FloatingPlant(modifier = Modifier.align(Alignment.TopEnd).offset(x = (-18).dp, y = 12.dp))
+
+        FloatingCard(
+            modifier = Modifier.align(Alignment.CenterStart).offset(x = 26.dp, y = 30.dp),
+            text = "4",
+            subtitle = "hari ini"
+        )
+        
+        Box(
+            modifier = Modifier
+                .offset(y = bobY.dp)
+                .size(width = 210.dp, height = 120.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(width = 230.dp, height = 72.dp)
+                    .background(Color(0xFF181818), RoundedCornerShape(40.dp))
+            )
+
+            Box(
+                modifier = Modifier
+                    .offset(y = (-18).dp)
+                    .size(width = 176.dp, height = 86.dp)
+                    .background(Color(0xFFB6B9A3), RoundedCornerShape(80.dp))
+                    .border(2.dp, Color(0xFF7A7B73), RoundedCornerShape(80.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AnimatedEye(blink)
+                    AnimatedEye(blink)
+                }
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(x = (-6).dp, y = (-20).dp)
+                .graphicsLayer {
+                    translationY = floatOffset
+                    rotationZ = 8f
+                }
+        ) {
+            DoodleLeaf()
+        }
+        
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .offset(x = 18.dp, y = 10.dp)
+                .graphicsLayer {
+                    translationY = floatOffset * 0.85f
+                    rotationZ = -6f
+                }
+        ) {
+            DoodleLeaf()
+        }
+    }
+}
+
+@Composable
+fun DoodleLeaf() {
+    Box(
+        modifier = Modifier
+            .size(28.dp)
+            .background(Color(0xFFD5DDD0), CircleShape)
     )
 }
