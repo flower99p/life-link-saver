@@ -24,6 +24,9 @@ interface SavedLinkDao {
     @Query("SELECT * FROM saved_links WHERE category = :category ORDER BY createdAt DESC")
     fun getLinksByCategory(category: String): Flow<List<SavedLinkEntity>>
 
+    @Query("SELECT * FROM saved_links WHERE url = :url LIMIT 1")
+    suspend fun findByUrl(url: String): SavedLinkEntity?
+
     @Query("SELECT COUNT(*) FROM saved_links WHERE category = :category")
     fun getLinkCountByCategory(category: String): Flow<Int>
 }

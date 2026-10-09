@@ -4,14 +4,11 @@
 
 ## 🎯 Fitur Utama
 
-- **Save Link**: Simpan URL dengan mudah
-- **Animated Doodle**: Mascot yang bergerak dengan animasi mata berkedip dan daun mengapung
-- **Material 3 Design**: UI modern dan soft sesuai design guidelines Material 3
-- **Saved Links Screen**: Lihat semua link yang sudah disimpan
-- **Open in Browser**: Buka link langsung di browser favorit
-- **Delete Link**: Hapus link yang tidak diperlukan
-- **Category Support**: Kategorisasi link (Ide, Inspirasi, dll)
-- **Dark Mode**: Dukung light dan dark theme otomatis
+- **Save Link** dengan thumbnail otomatis (og:image / thumbnail YouTube)
+- **Material 3 + Monet**: warna dinamis mengikuti wallpaper (Android 12+), dark mode otomatis
+- **Cari & filter** berdasarkan kategori (Ide, Inspirasi, Belajar, Lainnya)
+- **Share ke aplikasi**: bagikan link dari browser/aplikasi lain langsung ke Life Link Saver
+- **Judul & catatan** opsional, buka di browser, hapus link
 
 ## 🛠️ Tech Stack
 

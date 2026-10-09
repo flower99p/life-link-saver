@@ -13,6 +13,8 @@ class LinkRepository(private val savedLinkDao: SavedLinkDao) {
     fun getLinkCountByCategory(category: String): Flow<Int> =
         savedLinkDao.getLinkCountByCategory(category)
 
+    suspend fun findByUrl(url: String): SavedLinkEntity? = savedLinkDao.findByUrl(url)
+
     suspend fun insertLink(link: SavedLinkEntity): Long = savedLinkDao.insertLink(link)
 
     suspend fun updateLink(link: SavedLinkEntity) = savedLinkDao.updateLink(link)
