@@ -31,6 +31,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.lifecycleScope
+import com.example.lifelinksaver.data.db.AppDatabase
+import com.example.lifelinksaver.data.db.SavedLinkEntity
+import com.example.lifelinksaver.data.repository.LinkRepository
+import kotlinx.coroutines.launch
 import com.example.lifelinksaver.ui.components.AnimatedDoodleScene
 import com.example.lifelinksaver.ui.components.BottomNavigationBar
 import com.example.lifelinksaver.ui.components.CategoryCard
@@ -39,6 +44,10 @@ import com.example.lifelinksaver.ui.components.TopStatusBar
 import com.example.lifelinksaver.ui.theme.LifeLinkSaverTheme
 
 class MainActivity : ComponentActivity() {
+    private val repository by lazy {
+        LinkRepository(AppDatabase.getDatabase(applicationContext).savedLinkDao())
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -59,13 +68,7 @@ class MainActivity : ComponentActivity() {
         var selectedTab by remember { mutableStateOf("Home") }
         var selectedCategory by remember { mutableStateOf("Masuk") }
 
-        val savedLinks = remember {
-            mutableStateListOf(
-                LinkItem(1, "https://example.com", "Example", "Masuk"),
-                LinkItem(2, "https://instagram.com", "Instagram", "Masuk"),
-                LinkItem(3, "https://github.com", "GitHub", "Masuk")
-            )
-        }
+        val savedLinks by repository.getAllLinks().collectAsState(initial = emptyList())
 
         Box(
             modifier = Modifier
@@ -80,14 +83,12 @@ class MainActivity : ComponentActivity() {
                     selectedCategory = selectedCategory,
                     onSaveLink = {
                         if (urlInput.isNotBlank()) {
-                            savedLinks.add(
-                                LinkItem(
-                                    id = savedLinks.size + 1,
-                                    url = urlInput,
-                                    title = extractDomain(urlInput),
-                                    category = selectedCategory
-                                )
+                            val link = SavedLinkEntity(
+                                url = urlInput,
+                                title = extractDomain(urlInput),
+                                category = selectedCategory
                             )
+                            lifecycleScope.launch { repository.insertLink(link) }
                             urlInput = ""
                         }
                     }
@@ -95,7 +96,7 @@ class MainActivity : ComponentActivity() {
 
                 "Saved" -> SavedLinksScreen(
                     links = savedLinks,
-                    onDeleteLink = { link -> savedLinks.remove(link) },
+                    onDeleteLink = { link -> lifecycleScope.launch { repository.deleteLink(link) } },
                     onOpenLink = { url -> openLink(url) }
                 )
 
@@ -121,7 +122,7 @@ class MainActivity : ComponentActivity() {
     fun HomeScreen(
         urlInput: String,
         onUrlInputChange: (String) -> Unit,
-        savedLinks: List<LinkItem>,
+        savedLinks: List<SavedLinkEntity>,
         selectedCategory: String,
         onSaveLink: () -> Unit
     ) {
@@ -243,8 +244,8 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun SavedLinksScreen(
-        links: List<LinkItem>,
-        onDeleteLink: (LinkItem) -> Unit,
+        links: List<SavedLinkEntity>,
+        onDeleteLink: (SavedLinkEntity) -> Unit,
         onOpenLink: (String) -> Unit
     ) {
         Column(
@@ -300,7 +301,7 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun LinkCard(
-        link: LinkItem,
+        link: SavedLinkEntity,
         onDelete: () -> Unit,
         onOpen: () -> Unit
     ) {
@@ -408,13 +409,6 @@ class MainActivity : ComponentActivity() {
         }
     }
     
-    data class LinkItem(
-        val id: Int,
-        val url: String,
-        val title: String,
-        val category: String
-    )
-
     private fun extractDomain(url: String): String {
         return try {
             val uri = Uri.parse(url)
