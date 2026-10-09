@@ -1,9 +1,6 @@
 package com.example.lifelinksaver.ui
 
-import android.app.DownloadManager
 import android.content.Context
-import android.net.Uri
-import android.os.Environment
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -57,6 +54,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
@@ -73,6 +71,9 @@ import coil.compose.AsyncImage
 import com.example.lifelinksaver.LinkViewModel
 import com.example.lifelinksaver.data.db.SavedLinkEntity
 import com.example.lifelinksaver.data.remote.LinkMetadataFetcher
+import com.example.lifelinksaver.data.remote.MediaDownloader
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 private val Categories = listOf("Ide", "Inspirasi", "Belajar", "Lainnya")
 
@@ -88,6 +89,7 @@ fun LinkSaverScreen(
     var query by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf<String?>(null) }
     val context = androidx.compose.ui.platform.LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val prefs = remember { context.getSharedPreferences("settings", android.content.Context.MODE_PRIVATE) }
     var linkLayout by rememberSaveable { mutableStateOf(prefs.getString("link_layout", "Line") ?: "Line") }
     var selectedTab by rememberSaveable { mutableStateOf(0) }
@@ -238,7 +240,7 @@ fun LinkSaverScreen(
                             link = link,
                             layout = linkLayout,
                             onOpen = { onOpenLink(link.url) },
-                            onDownload = { enqueueMediaDownload(context, link) },
+                            onDownload = { enqueueMediaDownload(coroutineScope, context, link) },
                             onDelete = { viewModel.deleteLink(link) },
                             onRefresh = { viewModel.refreshThumbnail(link) }
                         )
@@ -254,7 +256,7 @@ fun LinkSaverScreen(
                             link = link,
                             layout = linkLayout,
                             onOpen = { onOpenLink(link.url) },
-                            onDownload = { enqueueMediaDownload(context, link) },
+                            onDownload = { enqueueMediaDownload(coroutineScope, context, link) },
                             onDelete = { viewModel.deleteLink(link) },
                             onRefresh = { viewModel.refreshThumbnail(link) }
                         )
@@ -438,33 +440,25 @@ private fun LinkCard(
     }
 }
 
-private fun enqueueMediaDownload(context: Context, link: SavedLinkEntity) {
+private fun enqueueMediaDownload(scope: CoroutineScope, context: Context, link: SavedLinkEntity) {
     val url = LinkMetadataFetcher.normalizeUrl(link.url)
     if (url == null) {
         Toast.makeText(context, "URL tidak valid", Toast.LENGTH_SHORT).show()
         return
     }
 
-    val fileName = Uri.parse(url).lastPathSegment
-        ?.replace(Regex("[^A-Za-z0-9._-]"), "_")
-        ?.take(100)
-        ?.takeIf { it.isNotBlank() && it != "." && it != ".." }
-        ?: "media"
-    val uniqueFileName = "${fileName.substringBeforeLast('.', fileName)}-${System.currentTimeMillis()}" +
-        fileName.substringAfterLast('.', "").takeIf { it.isNotEmpty() }?.let { ".$it" }.orEmpty()
-
-    try {
-        val request = DownloadManager.Request(Uri.parse(url))
-            .setTitle(link.title.ifBlank { LinkViewModel.hostOf(url) })
-            .setDescription("Mengunduh media")
-            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, uniqueFileName)
-        val manager = context.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
-            ?: error("Download service unavailable")
-        manager.enqueue(request)
-        Toast.makeText(context, "Unduhan dimulai", Toast.LENGTH_SHORT).show()
-    } catch (e: Exception) {
-        Toast.makeText(context, "Tidak dapat memulai unduhan", Toast.LENGTH_SHORT).show()
+    Toast.makeText(context, "Mengunduh media...", Toast.LENGTH_SHORT).show()
+    scope.launch {
+        try {
+            MediaDownloader.download(context.filesDir, url, link.title.ifBlank { LinkViewModel.hostOf(url) })
+            Toast.makeText(context, "Media tersimpan di memori internal aplikasi", Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            Toast.makeText(
+                context,
+                e.message ?: "Media tidak tersedia untuk diunduh dari tautan ini",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 }
 
