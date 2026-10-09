@@ -45,7 +45,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -63,7 +62,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.KeyboardType
@@ -162,32 +160,18 @@ fun LinkSaverScreen(
             )
         },
         bottomBar = {
-            NavigationBar(containerColor = Color(0xFFF3EDF5)) {
+            NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                 NavigationBarItem(
                     selected = !showSearch,
                     onClick = { selectedTab = 0; query = "" },
                     icon = { Icon(Icons.Default.Home, contentDescription = null) },
                     label = { Text("Beranda") },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = Color(0xFF51466B),
-                        selectedTextColor = Color(0xFF51466B),
-                        indicatorColor = Color(0xFFE8DDF4),
-                        unselectedIconColor = Color(0xFF514D56),
-                        unselectedTextColor = Color(0xFF514D56)
-                    )
                 )
                 NavigationBarItem(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
                     icon = { Icon(Icons.Default.Search, contentDescription = null) },
                     label = { Text("Cari") },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = Color(0xFF51466B),
-                        selectedTextColor = Color(0xFF51466B),
-                        indicatorColor = Color(0xFFE8DDF4),
-                        unselectedIconColor = Color(0xFF514D56),
-                        unselectedTextColor = Color(0xFF514D56)
-                    )
                 )
             }
         },
