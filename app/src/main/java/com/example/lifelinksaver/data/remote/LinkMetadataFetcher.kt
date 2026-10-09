@@ -13,6 +13,8 @@ data class LinkMetadata(val title: String?, val thumbnailUrl: String?)
 object LinkMetadataFetcher {
     private const val MAX_BYTES = 300_000
 
+    fun normalizeTitle(title: String): String = title.replace("(@)", "@")
+
     fun normalizeUrl(raw: String): String? {
         val trimmed = raw.trim()
         if (trimmed.isEmpty() || trimmed.any { it.isWhitespace() }) return null
@@ -34,13 +36,14 @@ object LinkMetadataFetcher {
                 ?.let { resolve(url, it) }
             val pageTitle = meta(html, "og:title") ?: meta(html, "twitter:title") ?: titleTag(html)
             LinkMetadata(
-                title = tiktok?.title?.takeUnless { isTikTokPlaceholderTitle(url, it) }
-                    ?: pageTitle?.takeUnless { isTikTokPlaceholderTitle(url, it) },
+                title = (tiktok?.title?.takeUnless { isTikTokPlaceholderTitle(url, it) }
+                    ?: pageTitle?.takeUnless { isTikTokPlaceholderTitle(url, it) })
+                    ?.let(::normalizeTitle),
                 thumbnailUrl = thumbnail ?: tiktok?.thumbnailUrl ?: youtube
             )
         } catch (e: Exception) {
             LinkMetadata(
-                tiktok?.title?.takeUnless { isTikTokPlaceholderTitle(url, it) },
+                tiktok?.title?.takeUnless { isTikTokPlaceholderTitle(url, it) }?.let(::normalizeTitle),
                 tiktok?.thumbnailUrl ?: youtube
             )
         }

@@ -114,7 +114,7 @@ fun LinkSaverScreen(
     val visible = links.filter {
         (filter == null || it.category == filter) &&
             (query.isBlank() ||
-                it.title.contains(query, true) ||
+            LinkMetadataFetcher.normalizeTitle(it.title).contains(query, true) ||
                 it.url.contains(query, true) ||
                 it.notes.contains(query, true))
     }
@@ -349,7 +349,7 @@ private fun LinkCard(
                 LinkThumbnail(link, Modifier.size(width = 96.dp, height = 80.dp))
                 Column(Modifier.weight(1f).padding(start = 12.dp)) {
                     Text(
-                        link.title.ifBlank { LinkViewModel.hostOf(link.url) },
+                        LinkMetadataFetcher.normalizeTitle(link.title).ifBlank { LinkViewModel.hostOf(link.url) },
                         style = MaterialTheme.typography.titleSmall,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
@@ -384,7 +384,7 @@ private fun LinkCard(
                 LinkThumbnail(link, Modifier.fillMaxWidth().aspectRatio(1f))
                 Column(Modifier.padding(start = 8.dp, top = 6.dp, end = 4.dp, bottom = 2.dp)) {
                     Text(
-                        link.title.ifBlank { LinkViewModel.hostOf(link.url) },
+                        LinkMetadataFetcher.normalizeTitle(link.title).ifBlank { LinkViewModel.hostOf(link.url) },
                         style = MaterialTheme.typography.labelLarge,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
@@ -413,7 +413,7 @@ private fun LinkCard(
                 LinkThumbnail(link, Modifier.fillMaxWidth().aspectRatio(16f / 9f))
                 Column(Modifier.padding(start = 16.dp, top = 12.dp, end = 8.dp, bottom = 8.dp)) {
                     Text(
-                        link.title.ifBlank { LinkViewModel.hostOf(link.url) },
+                        LinkMetadataFetcher.normalizeTitle(link.title).ifBlank { LinkViewModel.hostOf(link.url) },
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
@@ -470,7 +470,7 @@ private fun LinkThumbnail(link: SavedLinkEntity, modifier: Modifier) {
         if (link.thumbnailUrl != null) {
             AsyncImage(
                 model = link.thumbnailUrl,
-                contentDescription = link.title,
+                contentDescription = LinkMetadataFetcher.normalizeTitle(link.title),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
@@ -517,7 +517,7 @@ private fun EditLinkDialog(
 ) {
     LinkEditorDialog(
         initialUrl = link.url,
-        initialTitle = link.title,
+        initialTitle = LinkMetadataFetcher.normalizeTitle(link.title),
         initialNotes = link.notes,
         initialCategory = link.category,
         dialogTitle = "Edit link",
