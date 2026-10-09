@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -171,13 +172,13 @@ fun LinkSaverScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(visible.size, key = { visible[it].id }) { index ->
+                    gridItems(visible, key = { it.id }) { link ->
                         LinkCard(
-                            link = visible[index],
+                            link = link,
                             layout = linkLayout,
-                            onOpen = { onOpenLink(visible[index].url) },
-                            onDelete = { viewModel.deleteLink(visible[index]) },
-                            onRefresh = { viewModel.refreshThumbnail(visible[index]) }
+                            onOpen = { onOpenLink(link.url) },
+                            onDelete = { viewModel.deleteLink(link) },
+                            onRefresh = { viewModel.refreshThumbnail(link) }
                         )
                     }
                 }
@@ -315,49 +316,49 @@ private fun LinkCard(
             else -> {
                 LinkThumbnail(link, Modifier.fillMaxWidth().aspectRatio(16f / 9f))
                 Column(Modifier.padding(start = 16.dp, top = 12.dp, end = 8.dp, bottom = 8.dp)) {
-            Text(
-                link.title.ifBlank { LinkViewModel.hostOf(link.url) },
-                style = MaterialTheme.typography.titleMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                LinkViewModel.hostOf(link.url),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            if (link.notes.isNotBlank()) {
-                Text(
-                    link.notes,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    link.category,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.weight(1f)
-                )
-                if (link.thumbnailUrl == null) {
-                    TextButton(onClick = onRefresh) { Text("Muat thumbnail") }
-                }
-                IconButton(onClick = onOpen) {
-                    Icon(Icons.Default.OpenInBrowser, contentDescription = "Buka")
-                }
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = "Hapus",
-                        tint = MaterialTheme.colorScheme.error
+                    Text(
+                        link.title.ifBlank { LinkViewModel.hostOf(link.url) },
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
-                }
-            }
+                    Text(
+                        LinkViewModel.hostOf(link.url),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (link.notes.isNotBlank()) {
+                        Text(
+                            link.notes,
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            link.category,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.weight(1f)
+                        )
+                        if (link.thumbnailUrl == null) {
+                            TextButton(onClick = onRefresh) { Text("Muat thumbnail") }
+                        }
+                        IconButton(onClick = onOpen) {
+                            Icon(Icons.Default.OpenInBrowser, contentDescription = "Buka")
+                        }
+                        IconButton(onClick = onDelete) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Hapus",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
                 }
             }
         }
