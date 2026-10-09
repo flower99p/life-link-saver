@@ -1,7 +1,5 @@
 package com.example.lifelinksaver.ui
 
-import android.content.Context
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -24,10 +22,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Link
@@ -60,7 +56,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
@@ -77,9 +72,6 @@ import coil.compose.AsyncImage
 import com.example.lifelinksaver.LinkViewModel
 import com.example.lifelinksaver.data.db.SavedLinkEntity
 import com.example.lifelinksaver.data.remote.LinkMetadataFetcher
-import com.example.lifelinksaver.data.remote.MediaDownloader
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 private val Categories = listOf("Ide", "Inspirasi", "Belajar", "Lainnya")
 
@@ -95,7 +87,6 @@ fun LinkSaverScreen(
     var query by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf<String?>(null) }
     val context = androidx.compose.ui.platform.LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
     val prefs = remember { context.getSharedPreferences("settings", android.content.Context.MODE_PRIVATE) }
     var linkLayout by rememberSaveable { mutableStateOf(prefs.getString("link_layout", "Line") ?: "Line") }
     var selectedTab by rememberSaveable { mutableStateOf(0) }
@@ -131,9 +122,9 @@ fun LinkSaverScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
-                title = { Text(listOf("Beranda", "Cari", "Pustaka")[selectedTab]) },
+                title = { Text(if (showSearch) "Cari" else "Beranda") },
                 actions = {
-                    if (selectedTab == 2) {
+                    if (!showSearch) {
                         Box {
                             IconButton(onClick = { showLayoutMenu = true }) {
                                 Icon(
@@ -169,7 +160,7 @@ fun LinkSaverScreen(
         bottomBar = {
             NavigationBar(containerColor = Color(0xFFF3EDF5)) {
                 NavigationBarItem(
-                    selected = selectedTab == 0,
+                    selected = !showSearch,
                     onClick = { selectedTab = 0; query = "" },
                     icon = { Icon(Icons.Default.Home, contentDescription = null) },
                     label = { Text("Beranda") },
@@ -195,18 +186,6 @@ fun LinkSaverScreen(
                     )
                 )
                 NavigationBarItem(
-                    selected = selectedTab == 2,
-                    onClick = { selectedTab = 2; query = "" },
-                    icon = { Icon(Icons.Default.Bookmarks, contentDescription = null) },
-                    label = { Text("Pustaka") },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = Color(0xFF51466B),
-                        selectedTextColor = Color(0xFF51466B),
-                        indicatorColor = Color(0xFFE8DDF4),
-                        unselectedIconColor = Color(0xFF514D56),
-                        unselectedTextColor = Color(0xFF514D56)
-                    )
-                )
             }
         },
         floatingActionButton = {
@@ -273,7 +252,6 @@ fun LinkSaverScreen(
                             link = link,
                             layout = linkLayout,
                             onOpen = { onOpenLink(link.url) },
-                            onDownload = { enqueueMediaDownload(coroutineScope, context, link) },
                             onDelete = { viewModel.deleteLink(link) },
                             onRefresh = { viewModel.refreshThumbnail(link) }
                         )
@@ -289,7 +267,6 @@ fun LinkSaverScreen(
                             link = link,
                             layout = linkLayout,
                             onOpen = { onOpenLink(link.url) },
-                            onDownload = { enqueueMediaDownload(coroutineScope, context, link) },
                             onDelete = { viewModel.deleteLink(link) },
                             onRefresh = { viewModel.refreshThumbnail(link) }
                         )
@@ -342,7 +319,6 @@ private fun LinkCard(
     link: SavedLinkEntity,
     layout: String,
     onOpen: () -> Unit,
-    onDownload: () -> Unit,
     onDelete: () -> Unit,
     onRefresh: () -> Unit
 ) {
@@ -380,9 +356,6 @@ private fun LinkCard(
                         if (link.thumbnailUrl == null) {
                             TextButton(onClick = onRefresh) { Text("Muat thumbnail") }
                         }
-                        IconButton(onClick = onDownload) {
-                            Icon(Icons.Default.Download, contentDescription = "Unduh media")
-                        }
                         IconButton(onClick = onDelete) {
                             Icon(Icons.Default.Delete, contentDescription = "Hapus")
                         }
@@ -403,9 +376,6 @@ private fun LinkCard(
                             IconButton(onClick = onRefresh, modifier = Modifier.size(40.dp)) {
                                 Icon(Icons.Default.Link, contentDescription = "Muat thumbnail")
                             }
-                        }
-                        IconButton(onClick = onDownload, modifier = Modifier.size(40.dp)) {
-                            Icon(Icons.Default.Download, contentDescription = "Unduh media")
                         }
                         Spacer(Modifier.weight(1f))
                         IconButton(onClick = onDelete, modifier = Modifier.size(40.dp)) {
@@ -453,9 +423,6 @@ private fun LinkCard(
                         if (link.thumbnailUrl == null) {
                             TextButton(onClick = onRefresh) { Text("Muat thumbnail") }
                         }
-                        IconButton(onClick = onDownload) {
-                            Icon(Icons.Default.Download, contentDescription = "Unduh media")
-                        }
                         IconButton(onClick = onOpen) {
                             Icon(Icons.Default.OpenInBrowser, contentDescription = "Buka")
                         }
@@ -469,28 +436,6 @@ private fun LinkCard(
                     }
                 }
             }
-        }
-    }
-}
-
-private fun enqueueMediaDownload(scope: CoroutineScope, context: Context, link: SavedLinkEntity) {
-    val url = LinkMetadataFetcher.normalizeUrl(link.url)
-    if (url == null) {
-        Toast.makeText(context, "URL tidak valid", Toast.LENGTH_SHORT).show()
-        return
-    }
-
-    Toast.makeText(context, "Mengunduh media...", Toast.LENGTH_SHORT).show()
-    scope.launch {
-        try {
-            MediaDownloader.download(context.filesDir, url, link.title.ifBlank { LinkViewModel.hostOf(url) })
-            Toast.makeText(context, "Media tersimpan di memori internal aplikasi", Toast.LENGTH_LONG).show()
-        } catch (e: Exception) {
-            Toast.makeText(
-                context,
-                e.message ?: "Media tidak tersedia untuk diunduh dari tautan ini",
-                Toast.LENGTH_LONG
-            ).show()
         }
     }
 }
