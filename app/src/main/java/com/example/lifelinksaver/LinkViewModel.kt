@@ -60,7 +60,13 @@ class LinkViewModel(app: Application) : AndroidViewModel(app) {
             repository.updateLink(
                 link.copy(
                     thumbnailUrl = meta.thumbnailUrl ?: link.thumbnailUrl,
-                    title = link.title.ifBlank { meta.title ?: hostOf(link.url) }
+                    title = if (link.title.isBlank() ||
+                        LinkMetadataFetcher.isTikTokPlaceholderTitle(link.url, link.title)
+                    ) {
+                        meta.title ?: hostOf(link.url)
+                    } else {
+                        link.title
+                    }
                 )
             )
         }
