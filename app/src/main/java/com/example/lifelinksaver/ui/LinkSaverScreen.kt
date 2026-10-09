@@ -22,25 +22,29 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -53,6 +57,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.KeyboardType
@@ -79,9 +84,10 @@ fun LinkSaverScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
     val prefs = remember { context.getSharedPreferences("settings", android.content.Context.MODE_PRIVATE) }
     var linkLayout by rememberSaveable { mutableStateOf(prefs.getString("link_layout", "Line") ?: "Line") }
-    var showSearch by rememberSaveable { mutableStateOf(false) }
+    var selectedTab by rememberSaveable { mutableStateOf(0) }
     var showAdd by rememberSaveable { mutableStateOf(false) }
     var prefill by rememberSaveable { mutableStateOf("") }
+    val showSearch = selectedTab == 1
 
     LaunchedEffect(sharedText) {
         if (sharedText != null) {
@@ -103,30 +109,60 @@ fun LinkSaverScreen(
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("LinkSave") },
+            TopAppBar(
+                title = { Text(listOf("Beranda", "Cari", "Pustaka")[selectedTab]) },
                 scrollBehavior = scrollBehavior
             )
         },
-        floatingActionButton = {
-            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                SmallFloatingActionButton(
-                    onClick = {
-                        showSearch = !showSearch
-                        if (!showSearch) query = ""
-                    }
-                ) {
-                    Icon(
-                        if (showSearch) Icons.Default.Close else Icons.Default.Search,
-                        contentDescription = "Cari link"
+        bottomBar = {
+            NavigationBar(containerColor = Color(0xFFF3EDF5)) {
+                NavigationBarItem(
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0; query = "" },
+                    icon = { Icon(Icons.Default.Home, contentDescription = null) },
+                    label = { Text("Beranda") },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = Color(0xFF51466B),
+                        selectedTextColor = Color(0xFF51466B),
+                        indicatorColor = Color(0xFFE8DDF4),
+                        unselectedIconColor = Color(0xFF514D56),
+                        unselectedTextColor = Color(0xFF514D56)
                     )
-                }
-                ExtendedFloatingActionButton(
-                    onClick = { prefill = ""; showAdd = true },
-                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                    text = { Text("Simpan link") }
+                )
+                NavigationBarItem(
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 },
+                    icon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    label = { Text("Cari") },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = Color(0xFF51466B),
+                        selectedTextColor = Color(0xFF51466B),
+                        indicatorColor = Color(0xFFE8DDF4),
+                        unselectedIconColor = Color(0xFF514D56),
+                        unselectedTextColor = Color(0xFF514D56)
+                    )
+                )
+                NavigationBarItem(
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2; query = "" },
+                    icon = { Icon(Icons.Default.Bookmarks, contentDescription = null) },
+                    label = { Text("Pustaka") },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = Color(0xFF51466B),
+                        selectedTextColor = Color(0xFF51466B),
+                        indicatorColor = Color(0xFFE8DDF4),
+                        unselectedIconColor = Color(0xFF514D56),
+                        unselectedTextColor = Color(0xFF514D56)
+                    )
                 )
             }
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { prefill = ""; showAdd = true },
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                text = { Text("Simpan link") }
+            )
         }
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
@@ -167,16 +203,18 @@ fun LinkSaverScreen(
                 }
             }
 
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(listOf("Line", "Compact", "Grid 3")) { layout ->
-                    FilterChip(
-                        selected = linkLayout == layout,
-                        onClick = { linkLayout = layout; prefs.edit().putString("link_layout", layout).apply() },
-                        label = { Text(layout) }
-                    )
+            if (selectedTab == 2) {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(listOf("Line", "Compact", "Grid 3")) { layout ->
+                        FilterChip(
+                            selected = linkLayout == layout,
+                            onClick = { linkLayout = layout; prefs.edit().putString("link_layout", layout).apply() },
+                            label = { Text(layout) }
+                        )
+                    }
                 }
             }
 
