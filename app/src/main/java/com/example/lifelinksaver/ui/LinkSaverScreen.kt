@@ -70,6 +70,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
 import com.example.lifelinksaver.LinkViewModel
 import com.example.lifelinksaver.data.db.SavedLinkEntity
 import com.example.lifelinksaver.data.remote.LinkMetadataFetcher
@@ -469,7 +471,13 @@ private fun LinkThumbnail(link: SavedLinkEntity, modifier: Modifier) {
     Box(modifier) {
         if (link.thumbnailUrl != null) {
             AsyncImage(
-                model = link.thumbnailUrl,
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(link.thumbnailUrl)
+                    .size(320, 320)
+                    .allowHardware(true)
+                    .bitmapConfig(android.graphics.Bitmap.Config.RGB_565)
+                    .crossfade(false)
+                    .build(),
                 contentDescription = LinkMetadataFetcher.normalizeTitle(link.title),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
