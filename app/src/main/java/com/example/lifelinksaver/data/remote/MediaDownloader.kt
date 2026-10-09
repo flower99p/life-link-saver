@@ -1,6 +1,7 @@
 package com.example.lifelinksaver.data.remote
 
 import java.io.File
+import java.io.ByteArrayOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
@@ -20,7 +21,9 @@ object MediaDownloader {
             try {
                 val contentType = connection.contentType?.substringBefore(';')?.lowercase(Locale.ROOT).orEmpty()
                 val extension = extensionFrom(mediaUrl, contentType)
-                if (!isMedia(contentType, extension)) {
+                if (contentType == "text/html" || contentType == "application/xhtml+xml" ||
+                    !isMedia(contentType, extension)
+                ) {
                     throw IllegalArgumentException(
                         "Tautan ini bukan media langsung atau media sosial membatasi akses unduhan"
                     )
@@ -69,27 +72,28 @@ object MediaDownloader {
             try {
                 val type = connection.contentType?.substringBefore(';')?.lowercase(Locale.ROOT).orEmpty()
                 val extension = extensionFrom(currentUrl, type)
-                if (isMedia(type, extension)) return currentUrl
-                if (type != "text/html" && type != "application/xhtml+xml") {
+                if (type == "text/html" || type == "application/xhtml+xml") {
+                    val html = connection.inputStream.use { input ->
+                        val bytes = ByteArrayOutputStream(MAX_HTML_BYTES)
+                        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                        var total = 0
+                        while (total < MAX_HTML_BYTES) {
+                            val count = input.read(buffer, 0, minOf(buffer.size, MAX_HTML_BYTES - total))
+                            if (count < 0) break
+                            bytes.write(buffer, 0, count)
+                            total += count
+                        }
+                        bytes.toString(Charsets.UTF_8.name())
+                    }
+                    currentUrl = findPublicMediaUrl(html, currentUrl)
+                        ?: throw IllegalArgumentException(
+                            "Media tidak ditemukan. Konten privat atau media sosial mungkin membatasi unduhan."
+                        )
+                } else if (isMedia(type, extension)) {
+                    return currentUrl
+                } else {
                     throw IllegalArgumentException("Tautan ini tidak mengarah ke file media")
                 }
-
-                val html = connection.inputStream.use { input ->
-                    val bytes = ByteArrayOutputStream(MAX_HTML_BYTES)
-                    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-                    var total = 0
-                    while (total < MAX_HTML_BYTES) {
-                        val count = input.read(buffer, 0, minOf(buffer.size, MAX_HTML_BYTES - total))
-                        if (count < 0) break
-                        bytes.write(buffer, 0, count)
-                        total += count
-                    }
-                    bytes.toString(Charsets.UTF_8.name())
-                }
-                currentUrl = findPublicMediaUrl(html, currentUrl)
-                    ?: throw IllegalArgumentException(
-                        "Media tidak ditemukan. Konten privat atau media sosial mungkin membatasi unduhan."
-                    )
             } finally {
                 connection.disconnect()
             }
