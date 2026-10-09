@@ -4,6 +4,7 @@ import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
 import java.net.URLEncoder
+import org.json.JSONObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -26,16 +27,22 @@ object LinkMetadataFetcher {
 
     suspend fun fetch(url: String): LinkMetadata = withContext(Dispatchers.IO) {
         val youtube = youtubeThumbnail(url)
+        val tiktok = if (isTikTokUrl(url)) tiktokMetadata(url) else null
         try {
             val html = download(url)
             val thumbnail = (meta(html, "og:image") ?: meta(html, "twitter:image"))
                 ?.let { resolve(url, it) }
+            val pageTitle = meta(html, "og:title") ?: meta(html, "twitter:title") ?: titleTag(html)
             LinkMetadata(
-                title = meta(html, "og:title") ?: meta(html, "twitter:title") ?: titleTag(html),
-                thumbnailUrl = thumbnail ?: youtube ?: tiktokThumbnail(url)
+                title = tiktok?.title?.takeUnless { isTikTokPlaceholderTitle(url, it) }
+                    ?: pageTitle?.takeUnless { isTikTokPlaceholderTitle(url, it) },
+                thumbnailUrl = thumbnail ?: tiktok?.thumbnailUrl ?: youtube
             )
         } catch (e: Exception) {
-            LinkMetadata(null, tiktokThumbnail(url) ?: youtube)
+            LinkMetadata(
+                tiktok?.title?.takeUnless { isTikTokPlaceholderTitle(url, it) },
+                tiktok?.thumbnailUrl ?: youtube
+            )
         }
     }
 
@@ -95,6 +102,9 @@ object LinkMetadataFetcher {
     private fun unescape(s: String) = s.replace("&amp;", "&").replace("&quot;", "\"")
         .replace("&#39;", "'").replace("&lt;", "<").replace("&gt;", ">")
 
+    fun isTikTokPlaceholderTitle(url: String, title: String): Boolean =
+        isTikTokUrl(url) && title.trim().equals("TikTok - Make Your Day", ignoreCase = true)
+
     private fun resolve(base: String, link: String): String? = try {
         val r = URL(URL(base), link).toString()
         if (r.startsWith("http://") || r.startsWith("https://")) r else null
@@ -113,23 +123,26 @@ object LinkMetadataFetcher {
         return if (id.isNullOrBlank()) null else "https://img.youtube.com/vi/$id/hqdefault.jpg"
     }
 
-    private fun tiktokThumbnail(url: String): String? {
-        val host = try { URI(url).host?.lowercase() } catch (e: Exception) { null } ?: return null
-        if (host != "tt.site" && !host.endsWith(".tt.site") &&
-            host != "tiktok.com" && !host.endsWith(".tiktok.com")
-        ) return null
-
+    private fun tiktokMetadata(url: String): LinkMetadata? {
         return try {
             val encodedUrl = URLEncoder.encode(url, Charsets.UTF_8.name())
             val response = download("https://www.tiktok.com/oembed?url=$encodedUrl")
-            val thumbnail = Regex("\"thumbnail_url\"\\s*:\\s*\"((?:\\\\.|[^\"\\\\])*)\"")
-                .find(response)?.groupValues?.get(1)
-                ?.replace("\\/", "/")
-                ?.replace(Regex("\\\\u0026", RegexOption.IGNORE_CASE), "&")
-                ?: return null
-            resolve("https://www.tiktok.com", thumbnail)
+            val json = JSONObject(response)
+            val title = (json.opt("title") as? String)
+                ?.let(::unescape)
+                ?.trim()
+                ?.takeIf { it.isNotEmpty() }
+            val thumbnail = (json.opt("thumbnail_url") as? String)
+                ?.let { resolve("https://www.tiktok.com", it) }
+            LinkMetadata(title, thumbnail)
         } catch (e: Exception) {
             null
         }
+    }
+
+    private fun isTikTokUrl(url: String): Boolean {
+        val host = try { URI(url).host?.lowercase() } catch (e: Exception) { null } ?: return false
+        return host == "tt.site" || host.endsWith(".tt.site") ||
+            host == "tiktok.com" || host.endsWith(".tiktok.com")
     }
 }
