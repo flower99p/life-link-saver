@@ -28,12 +28,17 @@ import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ViewAgenda
+import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
@@ -95,6 +100,7 @@ fun LinkSaverScreen(
     var linkLayout by rememberSaveable { mutableStateOf(prefs.getString("link_layout", "Line") ?: "Line") }
     var selectedTab by rememberSaveable { mutableStateOf(0) }
     var showAdd by rememberSaveable { mutableStateOf(false) }
+    var showLayoutMenu by rememberSaveable { mutableStateOf(false) }
     var prefill by rememberSaveable { mutableStateOf("") }
     val showSearch = selectedTab == 1
     val categoryChipColors = FilterChipDefaults.filterChipColors(
@@ -126,6 +132,37 @@ fun LinkSaverScreen(
         topBar = {
             TopAppBar(
                 title = { Text(listOf("Beranda", "Cari", "Pustaka")[selectedTab]) },
+                actions = {
+                    if (selectedTab == 2) {
+                        Box {
+                            IconButton(onClick = { showLayoutMenu = true }) {
+                                Icon(
+                                    imageVector = when (linkLayout) {
+                                        "Compact" -> Icons.Default.ViewAgenda
+                                        "Grid 3" -> Icons.Default.GridView
+                                        else -> Icons.Default.ViewList
+                                    },
+                                    contentDescription = "Pilih tata letak"
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showLayoutMenu,
+                                onDismissRequest = { showLayoutMenu = false }
+                            ) {
+                                listOf("Line", "Compact", "Grid 3").forEach { layout ->
+                                    DropdownMenuItem(
+                                        text = { Text(if (linkLayout == layout) "✓ $layout" else layout) },
+                                        onClick = {
+                                            linkLayout = layout
+                                            prefs.edit().putString("link_layout", layout).apply()
+                                            showLayoutMenu = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                },
                 scrollBehavior = scrollBehavior
             )
         },
@@ -219,21 +256,6 @@ fun LinkSaverScreen(
                         colors = categoryChipColors,
                         border = null
                     )
-                }
-            }
-
-            if (selectedTab == 2) {
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(listOf("Line", "Compact", "Grid 3")) { layout ->
-                        FilterChip(
-                            selected = linkLayout == layout,
-                            onClick = { linkLayout = layout; prefs.edit().putString("link_layout", layout).apply() },
-                            label = { Text(layout) }
-                        )
-                    }
                 }
             }
 
