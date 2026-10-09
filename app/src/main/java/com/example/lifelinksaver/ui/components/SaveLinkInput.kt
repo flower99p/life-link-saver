@@ -1,147 +1,208 @@
 package com.example.lifelinksaver.ui.components
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.FolderOpen
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.dp
 
 @Composable
-fun SaveLinkInput(
-    value: String,
-    onValueChange: (String) -> Unit,
-    onSave: () -> Unit,
-    selectedCategory: String = "Masuk"
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
+fun AnimatedDoodleScene() {
+    val infiniteTransition = rememberInfiniteTransition(label = "doodle")
+
+    val bobY by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = -10f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "bobY"
+    )
+
+    val floatOffset by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 10f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1700, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "floatOffset"
+    )
+
+    val blink by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 0.72f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "blink"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(220.dp),
+        contentAlignment = Alignment.Center
     ) {
+        FloatingPlant(modifier = Modifier.align(Alignment.TopEnd).offset(x = (-18).dp, y = 12.dp))
+
+        FloatingCard(
+            modifier = Modifier.align(Alignment.CenterStart).offset(x = 26.dp, y = 30.dp),
+            text = "4",
+            subtitle = "hari ini"
+        )
+
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(64.dp)
-                .background(Color(0xFFEAE7E4), RoundedCornerShape(34.dp))
-                .border(1.dp, Color(0xFFE2E2E0), RoundedCornerShape(34.dp))
-                .padding(horizontal = 18.dp),
-            contentAlignment = Alignment.CenterStart
+                .offset(y = bobY.dp)
+                .size(width = 210.dp, height = 120.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    tint = Color(0xFF5E5E5E),
-                    modifier = Modifier.size(30.dp)
-                )
-                Spacer(Modifier.width(10.dp))
-
-                BasicTextField(
-                    value = value,
-                    onValueChange = onValueChange,
-                    textStyle = TextStyle(
-                        color = Color(0xFF4D4D4D),
-                        fontSize = 18.sp
-                    ),
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(vertical = 10.dp),
-                    cursorBrush = SolidColor(Color(0xFF4D4D4D))
-                ) { innerTextField ->
-                    if (value.isEmpty()) {
-                        Text(
-                            text = "Tempel link untuk disimpan...",
-                            color = Color(0xFF8F8F8F),
-                            fontSize = 18.sp
-                        )
-                    }
-                    innerTextField()
-                }
-
-                Spacer(Modifier.width(10.dp))
-                Box(
-                    modifier = Modifier
-                        .size(20.dp)
-                        .background(Color(0xFFDCD9D6), CircleShape)
-                )
-            }
-        }
-
-        Spacer(Modifier.height(18.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Simpan ke",
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color(0xFF4D4D4D)
+            Box(
+                modifier = Modifier
+                    .size(width = 230.dp, height = 72.dp)
+                    .background(Color(0xFF181818), RoundedCornerShape(40.dp))
             )
-
-            Spacer(Modifier.width(10.dp))
 
             Box(
                 modifier = Modifier
-                    .height(38.dp)
-                    .width(110.dp)
-                    .background(Color(0xFFC9D8BA), RoundedCornerShape(18.dp))
-                    .padding(horizontal = 14.dp),
+                    .offset(y = (-18).dp)
+                    .size(width = 176.dp, height = 86.dp)
+                    .background(Color(0xFFB6B9A3), RoundedCornerShape(80.dp))
+                    .border(2.dp, Color(0xFF7A7B73), RoundedCornerShape(80.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.FolderOpen,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = Color(0xFF3F4738)
-                    )
-                    Text(selectedCategory, color = Color(0xFF3F4738), fontWeight = FontWeight.Medium)
-                    Icon(
-                        imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = Color(0xFF3F4738)
-                    )
+                    AnimatedEye(blink)
+                    AnimatedEye(blink)
                 }
             }
+        }
 
-            Spacer(Modifier.width(10.dp))
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(x = (-6).dp, y = (-20).dp)
+                .graphicsLayer {
+                    translationY = floatOffset
+                    rotationZ = 8f
+                }
+        ) {
+            DoodleLeaf()
+        }
 
-            Button(
-                onClick = onSave,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEFEFEF)),
-                shape = RoundedCornerShape(18.dp),
-                modifier = Modifier.height(38.dp)
-            ) {
-                Text("Simpan", color = Color(0xFF4D4D4D))
-            }
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .offset(x = 18.dp, y = 10.dp)
+                .graphicsLayer {
+                    translationY = floatOffset * 0.85f
+                    rotationZ = -6f
+                }
+        ) {
+            DoodleLeaf()
         }
     }
+}
+
+@Composable
+fun AnimatedEye(blink: Float) {
+    Box(
+        modifier = Modifier
+            .size(26.dp)
+            .background(Color(0xFF1B1A1A), CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size((8 * blink).dp)
+                .background(Color(0xFFF8F8F7), CircleShape)
+        )
+    }
+}
+
+@Composable
+fun FloatingCard(
+    modifier: Modifier = Modifier,
+    text: String,
+    subtitle: String
+) {
+    Box(
+        modifier = modifier
+            .size(width = 92.dp, height = 118.dp)
+            .background(Color(0xFFF5F3F1), RoundedCornerShape(14.dp))
+            .border(1.dp, Color(0xFFE2E2E0), RoundedCornerShape(14.dp))
+            .padding(10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "TEMUANMU",
+                style = MaterialTheme.typography.labelSmall,
+                color = Color(0xFF4C4C4C)
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.headlineMedium,
+                color = Color(0xFF4C4C4C)
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.labelMedium,
+                color = Color(0xFF7A7A7A)
+            )
+        }
+    }
+}
+
+@Composable
+fun FloatingPlant(modifier: Modifier = Modifier) {
+    Box(modifier = modifier.size(70.dp)) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .size(44.dp, 18.dp)
+                .background(Color(0xFFB8A68A), RoundedCornerShape(9.dp))
+        )
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .size(18.dp, 36.dp)
+                .background(Color(0xFFB4C7A3), RoundedCornerShape(20.dp))
+        )
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .size(18.dp, 22.dp)
+                .background(Color(0xFFB3C89B), RoundedCornerShape(18.dp))
+        )
+    }
+}
+
+@Composable
+fun DoodleLeaf() {
+    Box(
+        modifier = Modifier
+            .size(28.dp)
+            .background(Color(0xFFD5DDD0), CircleShape)
+    )
 }

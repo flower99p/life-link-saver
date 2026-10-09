@@ -1,32 +1,29 @@
 package com.example.lifelinksaver.data.db
 
-import android.content.Context
-import androidx.room.Database
-import androidx.room.Room
-import androidx.room.RoomDatabase
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.Query
+import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 
-@Database(
-    entities = [SavedLinkEntity::class],
-    version = 1,
-    exportSchema = false
-)
-abstract class AppDatabase : RoomDatabase() {
-    abstract fun savedLinkDao(): SavedLinkDao
+@Dao
+interface SavedLinkDao {
+    @Insert
+    suspend fun insertLink(link: SavedLinkEntity): Long
 
-    companion object {
-        @Volatile
-        private var INSTANCE: AppDatabase? = null
+    @Update
+    suspend fun updateLink(link: SavedLinkEntity)
 
-        fun getDatabase(context: Context): AppDatabase {
-            return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "life_link_saver_db"
-                ).build()
-                INSTANCE = instance
-                instance
-            }
-        }
-    }
+    @Delete
+    suspend fun deleteLink(link: SavedLinkEntity)
+
+    @Query("SELECT * FROM saved_links ORDER BY createdAt DESC")
+    fun getAllLinks(): Flow<List<SavedLinkEntity>>
+
+    @Query("SELECT * FROM saved_links WHERE category = :category ORDER BY createdAt DESC")
+    fun getLinksByCategory(category: String): Flow<List<SavedLinkEntity>>
+
+    @Query("SELECT COUNT(*) FROM saved_links WHERE category = :category")
+    fun getLinkCountByCategory(category: String): Flow<Int>
 }

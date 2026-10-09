@@ -1,25 +1,32 @@
-package com.example.lifelinksaver.data.repository
+package com.example.lifelinksaver.data.db
 
-import com.example.lifelinksaver.data.db.SavedLinkDao
-import com.example.lifelinksaver.data.db.SavedLinkEntity
-import kotlinx.coroutines.flow.Flow
+import android.content.Context
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
 
-class LinkRepository(private val savedLinkDao: SavedLinkDao) {
-    fun getAllLinks(): Flow<List<SavedLinkEntity>> = savedLinkDao.getAllLinks()
+@Database(
+    entities = [SavedLinkEntity::class],
+    version = 1,
+    exportSchema = false
+)
+abstract class AppDatabase : RoomDatabase() {
+    abstract fun savedLinkDao(): SavedLinkDao
 
-    fun getLinksByCategory(category: String): Flow<List<SavedLinkEntity>> =
-        savedLinkDao.getLinksByCategory(category)
+    companion object {
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
 
-    fun getLinkCountByCategory(category: String): Flow<Int> =
-        savedLinkDao.getLinkCountByCategory(category)
-
-    suspend fun insertLink(link: SavedLinkEntity): Long = savedLinkDao.insertLink(link)
-
-    suspend fun updateLink(link: SavedLinkEntity) = savedLinkDao.updateLink(link)
-
-    suspend fun deleteLink(link: SavedLinkEntity) = savedLinkDao.deleteLink(link)
-
-    suspend fun deleteLinkById(id: Int) = savedLinkDao.deleteLinkById(id)
-
-    suspend fun getLinkById(id: Int): SavedLinkEntity? = savedLinkDao.getLinkById(id)
+        fun getDatabase(context: Context): AppDatabase {
+            return INSTANCE ?: synchronized(this) {
+                val instance = Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "life_link_saver_db"
+                ).build()
+                INSTANCE = instance
+                instance
+            }
+        }
+    }
 }

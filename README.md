@@ -1,72 +1,58 @@
-# Life Link Saver - Android App
+package com.example.lifelinksaver.ui.components
 
-Aplikasi Android untuk menyimpan dan mengelola link/URL dengan interface yang indah dan menenangkan.
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
-## Fitur
-- 🔗 Simpan link/URL dengan mudah
-- 📚 Kategorisasi link (Ide, Inspirasi, dll)
-- 🎨 UI yang clean dan soft
-- ✨ Animasi doodle yang menarik
-- 💾 Penyimpanan data menggunakan Room Database
-- 🎯 Navigasi bottom tab
+@Composable
+fun TopStatusBar() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(34.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .width(240.dp)
+                .height(28.dp)
+                .background(Color(0xFF111111), shape = RoundedCornerShape(18.dp))
+        )
 
-## Tech Stack
-- **Language**: Kotlin
-- **UI Framework**: Jetpack Compose
-- **Database**: Room Database
-- **Architecture**: MVVM (ViewModel + Repository)
-
-## Struktur Project
-```
-app/src/main/
-├── java/com/example/lifelinksaver/
-│   ├── data/
-│   │   ├── db/
-│   │   │   ├── AppDatabase.kt
-│   │   │   ├── SavedLinkEntity.kt
-│   │   │   └── SavedLinkDao.kt
-│   │   └── repository/
-│   │       └── LinkRepository.kt
-│   ├── ui/
-│   │   ├── components/
-│   │   │   ├── TopStatusBar.kt
-│   │   │   ├── CategoryCard.kt
-│   │   │   ├── AnimatedDoodleScene.kt
-│   │   │   ├── SaveLinkInput.kt
-│   │   │   └── BottomNavigationBar.kt
-│   │   └── theme/
-│   │       └── Theme.kt
-│   └── MainActivity.kt
-└── res/
-    └── values/
-        └── themes.xml
-```
-
-## Persyaratan
-- Android API 24+
-- Android Studio Arctic Fox atau lebih baru
-- Kotlin 1.9.24+
-
-## Setup
-1. Clone repository ini
-2. Buka di Android Studio
-3. Sync gradle files
-4. Run pada emulator atau device
-
-## Animasi
-Aplikasi ini menampilkan doodle yang bergerak dengan animasi:
-- **Bobbing Motion**: Doodle naik-turun perlahan
-- **Blinking Eyes**: Mata berkedip secara natural
-- **Floating Leaves**: Daun-daun kecil mengapung di sekitar
-
-## Pengembangan Selanjutnya
-- [ ] Share link ke aplikasi lain
-- [ ] Import bookmark dari browser
-- [ ] Pencarian link
-- [ ] Tag untuk link
-- [ ] Export/Backup data
-- [ ] Dark mode
-- [ ] Notifikasi pengingat
-
-## License
-MIT License
+        Row(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("10:59", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            Text("00.05", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(18.dp, 10.dp)
+                        .background(Color.Black, RoundedCornerShape(2.dp))
+                )
+                Box(
+                    modifier = Modifier
+                        .size(10.dp, 10.dp)
+                        .background(Color.Black, CircleShape)
+                )
+            }
+        }
+    }
+}
