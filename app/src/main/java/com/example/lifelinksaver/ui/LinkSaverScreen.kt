@@ -38,6 +38,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -75,7 +76,10 @@ fun LinkSaverScreen(
     val links by viewModel.links.collectAsState()
     var query by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf<String?>(null) }
-    var linkLayout by rememberSaveable { mutableStateOf("Line") }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val prefs = remember { context.getSharedPreferences("settings", android.content.Context.MODE_PRIVATE) }
+    var linkLayout by rememberSaveable { mutableStateOf(prefs.getString("link_layout", "Line") ?: "Line") }
+    var showSearch by rememberSaveable { mutableStateOf(false) }
     var showAdd by rememberSaveable { mutableStateOf(false) }
     var prefill by rememberSaveable { mutableStateOf("") }
 
@@ -100,20 +104,33 @@ fun LinkSaverScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Life Link Saver") },
+                title = { Text("LinkSave") },
                 scrollBehavior = scrollBehavior
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { prefill = ""; showAdd = true },
-                icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text("Simpan link") }
-            )
+            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                SmallFloatingActionButton(
+                    onClick = {
+                        showSearch = !showSearch
+                        if (!showSearch) query = ""
+                    }
+                ) {
+                    Icon(
+                        if (showSearch) Icons.Default.Close else Icons.Default.Search,
+                        contentDescription = "Cari link"
+                    )
+                }
+                ExtendedFloatingActionButton(
+                    onClick = { prefill = ""; showAdd = true },
+                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                    text = { Text("Simpan link") }
+                )
+            }
         }
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
-            OutlinedTextField(
+            if (showSearch) OutlinedTextField(
                 value = query,
                 onValueChange = { query = it },
                 placeholder = { Text("Cari link") },
@@ -157,7 +174,7 @@ fun LinkSaverScreen(
                 items(listOf("Line", "Compact", "Grid 3")) { layout ->
                     FilterChip(
                         selected = linkLayout == layout,
-                        onClick = { linkLayout = layout },
+                        onClick = { linkLayout = layout; prefs.edit().putString("link_layout", layout).apply() },
                         label = { Text(layout) }
                     )
                 }
