@@ -3,6 +3,7 @@ package com.example.lifelinksaver.data.remote
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
+import java.net.URLEncoder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -27,13 +28,14 @@ object LinkMetadataFetcher {
         val youtube = youtubeThumbnail(url)
         try {
             val html = download(url)
+            val thumbnail = (meta(html, "og:image") ?: meta(html, "twitter:image"))
+                ?.let { resolve(url, it) }
             LinkMetadata(
                 title = meta(html, "og:title") ?: meta(html, "twitter:title") ?: titleTag(html),
-                thumbnailUrl = (meta(html, "og:image") ?: meta(html, "twitter:image"))
-                    ?.let { resolve(url, it) } ?: youtube
+                thumbnailUrl = thumbnail ?: youtube ?: tiktokThumbnail(url)
             )
         } catch (e: Exception) {
-            LinkMetadata(null, youtube)
+            LinkMetadata(null, tiktokThumbnail(url) ?: youtube)
         }
     }
 
@@ -109,5 +111,25 @@ object LinkMetadataFetcher {
             else -> null
         }
         return if (id.isNullOrBlank()) null else "https://img.youtube.com/vi/$id/hqdefault.jpg"
+    }
+
+    private fun tiktokThumbnail(url: String): String? {
+        val host = try { URI(url).host?.lowercase() } catch (e: Exception) { null } ?: return null
+        if (host != "tt.site" && !host.endsWith(".tt.site") &&
+            host != "tiktok.com" && !host.endsWith(".tiktok.com")
+        ) return null
+
+        return try {
+            val encodedUrl = URLEncoder.encode(url, Charsets.UTF_8.name())
+            val response = download("https://www.tiktok.com/oembed?url=$encodedUrl")
+            val thumbnail = Regex("\"thumbnail_url\"\\s*:\\s*\"((?:\\\\.|[^\"\\\\])*)\"")
+                .find(response)?.groupValues?.get(1)
+                ?.replace("\\/", "/")
+                ?.replace(Regex("\\\\u0026", RegexOption.IGNORE_CASE), "&")
+                ?: return null
+            resolve("https://www.tiktok.com", thumbnail)
+        } catch (e: Exception) {
+            null
+        }
     }
 }

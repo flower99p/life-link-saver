@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Link
@@ -93,6 +94,7 @@ fun LinkSaverScreen(
     var showAdd by rememberSaveable { mutableStateOf(false) }
     var showLayoutMenu by rememberSaveable { mutableStateOf(false) }
     var prefill by rememberSaveable { mutableStateOf("") }
+    var editingLink by remember { mutableStateOf<SavedLinkEntity?>(null) }
     val showSearch = selectedTab == 1
     val categoryChipColors = FilterChipDefaults.filterChipColors(
         containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -252,6 +254,7 @@ fun LinkSaverScreen(
                             layout = linkLayout,
                             onOpen = { onOpenLink(link.url) },
                             onDelete = { viewModel.deleteLink(link) },
+                            onEdit = { editingLink = link },
                             onRefresh = { viewModel.refreshThumbnail(link) }
                         )
                     }
@@ -267,6 +270,7 @@ fun LinkSaverScreen(
                             layout = linkLayout,
                             onOpen = { onOpenLink(link.url) },
                             onDelete = { viewModel.deleteLink(link) },
+                            onEdit = { editingLink = link },
                             onRefresh = { viewModel.refreshThumbnail(link) }
                         )
                     }
@@ -282,6 +286,17 @@ fun LinkSaverScreen(
             onSave = { url, title, notes, category ->
                 viewModel.addLink(url, title, notes, category)
                 showAdd = false
+            }
+        )
+    }
+
+    editingLink?.let { link ->
+        EditLinkDialog(
+            link = link,
+            onDismiss = { editingLink = null },
+            onSave = { url, title, notes, category ->
+                viewModel.updateLink(link, url, title, notes, category)
+                editingLink = null
             }
         )
     }
@@ -319,6 +334,7 @@ private fun LinkCard(
     layout: String,
     onOpen: () -> Unit,
     onDelete: () -> Unit,
+    onEdit: () -> Unit,
     onRefresh: () -> Unit
 ) {
     ElevatedCard(
@@ -355,6 +371,9 @@ private fun LinkCard(
                         if (link.thumbnailUrl == null) {
                             TextButton(onClick = onRefresh) { Text("Muat thumbnail") }
                         }
+                        IconButton(onClick = onEdit) {
+                            Icon(Icons.Default.Edit, contentDescription = "Edit")
+                        }
                         IconButton(onClick = onDelete) {
                             Icon(Icons.Default.Delete, contentDescription = "Hapus")
                         }
@@ -377,6 +396,9 @@ private fun LinkCard(
                             }
                         }
                         Spacer(Modifier.weight(1f))
+                        IconButton(onClick = onEdit, modifier = Modifier.size(40.dp)) {
+                            Icon(Icons.Default.Edit, contentDescription = "Edit")
+                        }
                         IconButton(onClick = onDelete, modifier = Modifier.size(40.dp)) {
                             Icon(
                                 Icons.Default.Delete,
@@ -421,6 +443,9 @@ private fun LinkCard(
                         )
                         if (link.thumbnailUrl == null) {
                             TextButton(onClick = onRefresh) { Text("Muat thumbnail") }
+                        }
+                        IconButton(onClick = onEdit) {
+                            Icon(Icons.Default.Edit, contentDescription = "Edit")
                         }
                         IconButton(onClick = onOpen) {
                             Icon(Icons.Default.OpenInBrowser, contentDescription = "Buka")
@@ -473,15 +498,53 @@ private fun AddLinkDialog(
     onDismiss: () -> Unit,
     onSave: (url: String, title: String, notes: String, category: String) -> Unit
 ) {
+    LinkEditorDialog(
+        initialUrl = initialUrl,
+        initialTitle = "",
+        initialNotes = "",
+        initialCategory = Categories.first(),
+        dialogTitle = "Simpan link",
+        onDismiss = onDismiss,
+        onSave = onSave
+    )
+}
+
+@Composable
+private fun EditLinkDialog(
+    link: SavedLinkEntity,
+    onDismiss: () -> Unit,
+    onSave: (url: String, title: String, notes: String, category: String) -> Unit
+) {
+    LinkEditorDialog(
+        initialUrl = link.url,
+        initialTitle = link.title,
+        initialNotes = link.notes,
+        initialCategory = link.category,
+        dialogTitle = "Edit link",
+        onDismiss = onDismiss,
+        onSave = onSave
+    )
+}
+
+@Composable
+private fun LinkEditorDialog(
+    initialUrl: String,
+    initialTitle: String,
+    initialNotes: String,
+    initialCategory: String,
+    dialogTitle: String,
+    onDismiss: () -> Unit,
+    onSave: (url: String, title: String, notes: String, category: String) -> Unit
+) {
     var url by rememberSaveable { mutableStateOf(initialUrl) }
-    var title by rememberSaveable { mutableStateOf("") }
-    var notes by rememberSaveable { mutableStateOf("") }
-    var category by rememberSaveable { mutableStateOf(Categories.first()) }
+    var title by rememberSaveable { mutableStateOf(initialTitle) }
+    var notes by rememberSaveable { mutableStateOf(initialNotes) }
+    var category by rememberSaveable { mutableStateOf(initialCategory) }
     val normalized = LinkMetadataFetcher.normalizeUrl(url)
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Simpan link") },
+        title = { Text(dialogTitle) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
